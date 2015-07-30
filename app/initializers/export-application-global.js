@@ -12,16 +12,19 @@ export function initialize(container, application) {
       globalName = Ember.String.classify(config.modulePrefix);
     }
 
-    if (!window[globalName]) {
-      window[globalName] = application;
+    // https://lodash.com/docs#assign, but don't override existing properties
+    var merge = _.partialRight(_.assign, function(value, other) {
+        return _.isUndefined(value) ? other : value;
+    });
 
-      application.reopen({
-        willDestroy: function(){
-          this._super.apply(this, arguments);
-          delete window[globalName];
-        }
-      });
-    }
+    window[globalName] = merge(application, window[globalName]);
+
+    application.reopen({
+      willDestroy: function(){
+        this._super.apply(this, arguments);
+        delete window[globalName];
+      }
+    });
   }
 };
 
